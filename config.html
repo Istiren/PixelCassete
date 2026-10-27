@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Configuración - Cassette Widget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-8 font-sans">
+    <div class="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+        <h1 class="text-xl font-bold mb-6 text-indigo-400 flex items-center gap-3">
+            <i class="fa-solid fa-sliders"></i> Personalizador del Cassette Widget
+        </h1>
+
+        <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs mb-1 text-slate-300">Tono del Plástico (Hue)</label>
+                    <input type="range" id="hue" min="0" max="360" value="0" class="w-full accent-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs mb-1 text-slate-300">Saturación</label>
+                    <input type="range" id="saturate" min="0" max="300" value="100" class="w-full accent-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs mb-1 text-slate-300">Color Fondo Cinta</label>
+                    <input type="color" id="tapeBg" value="#ffffff" class="w-full h-10 rounded bg-slate-800 border border-slate-700 cursor-pointer">
+                </div>
+                <div>
+                    <label class="block text-xs mb-1 text-slate-300">Color Texto Cinta</label>
+                    <input type="color" id="tapeText" value="#111111" class="w-full h-10 rounded bg-slate-800 border border-slate-700 cursor-pointer">
+                </div>
+            </div>
+
+            <hr class="border-slate-800">
+
+            <div>
+                <label class="block text-xs mb-1 text-slate-300">Prueba de Canción / Artista</label>
+                <input type="text" id="trackTitle" value="Lofi Chill Beats - VTuber Radio Vol. 1" class="w-full bg-slate-800 border border-slate-700 text-sm rounded p-2 text-white">
+            </div>
+
+            <div>
+                <label class="block text-xs mb-1 text-slate-300">URL Carátula Álbum</label>
+                <input type="text" id="coverUrl" value="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&auto=format&fit=crop&q=60" class="w-full bg-slate-800 border border-slate-700 text-sm rounded p-2 text-white">
+            </div>
+
+            <button id="save-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-semibold rounded-xl transition text-sm">
+                Guardar y Aplicar Cambios
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const saveBtn = document.getElementById('save-btn');
+
+        saveBtn.addEventListener('click', () => {
+            const settings = {
+                hue: document.getElementById('hue').value,
+                saturate: document.getElementById('saturate').value,
+                tapeBg: document.getElementById('tapeBg').value,
+                tapeText: document.getElementById('tapeText').value,
+                trackTitle: document.getElementById('trackTitle').value,
+                coverUrl: document.getElementById('coverUrl').value,
+            };
+
+            localStorage.setItem('cassette_settings', JSON.stringify(settings));
+            alert('¡Configuración guardada! Actualiza o revisa tu fuente en OBS.');
+        });
+    </script>
+</body>
+</html>
