@@ -3,70 +3,350 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Configuración - Cassette Widget</title>
+    <title>Configurador & Vista Previa - Cassette Widget</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-8 font-sans">
-    <div class="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-        <h1 class="text-xl font-bold mb-6 text-indigo-400 flex items-center gap-3">
-            <i class="fa-solid fa-sliders"></i> Personalizador del Cassette Widget
-        </h1>
 
-        <div class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <style>
+        .pixelated {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            -ms-interpolation-mode: nearest-neighbor;
+        }
+
+        .cassette-wrapper {
+            position: relative;
+            width: 380px;
+            height: 190px;
+            margin: 0 auto;
+        }
+
+        .cassette-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .gear {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            top: 60px;
+            z-index: 3;
+            transform-origin: center center;
+        }
+
+        .gear-left { left: 122px; }
+        .gear-right { left: 210px; }
+
+        .is-playing .gear {
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .tape-label {
+            position: absolute;
+            top: 17px;
+            left: 31px;
+            width: 318px;
+            height: 40px;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            overflow: hidden;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            border-radius: 2px;
+        }
+
+        .album-art {
+            width: 30px;
+            height: 30px;
+            object-fit: cover;
+            border-radius: 2px;
+            margin-right: 8px;
+            flex-shrink: 0;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+        }
+
+        .track-info-container {
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .track-text-scroll {
+            display: inline-block;
+            white-space: nowrap;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            color: #111111;
+        }
+
+        .marquee-active {
+            animation: marquee 10s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+
+        #prev-cuerpo { z-index: 2; }
+        #prev-detalles { z-index: 5; }
+        #prev-cintas { z-index: 1; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
+
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- COLUMNA IZQUIERDA: VISTA PREVIA EN VIVO -->
+        <div class="flex flex-col items-center justify-start space-y-4">
+            <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl text-center">
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-4 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-eye"></i> Vista Previa en Vivo (OBS)
+                </h2>
+                
+                <div class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-6 relative overflow-hidden flex items-center justify-center min-h-[220px]">
+                    <div id="cassette-widget-prev" class="cassette-wrapper is-playing">
+                        <img id="prev-cintas" class="cassette-layer pixelated" src="cintas_fondo.png" alt="">
+
+                        <div id="prev-tape-label" class="tape-label">
+                            <img id="prev-album-cover" class="album-art pixelated" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&auto=format&fit=crop&q=60" alt="">
+                            <div class="track-info-container">
+                                <div id="prev-track-text" class="track-text-scroll">
+                                    Lofi Chill Beats - VTuber Radio Vol. 1
+                                </div>
+                            </div>
+                        </div>
+
+                        <img class="gear gear-left cassette-layer pixelated" src="engranaje.png" alt="">
+                        <img class="gear gear-right cassette-layer pixelated" src="engranaje.png" alt="">
+                        <img id="prev-cuerpo" class="cassette-layer pixelated" src="cuerpo_cassette.png" alt="">
+                        <img id="prev-detalles" class="cassette-layer pixelated" src="detalles_fijos.png" alt="">
+                    </div>
+                </div>
+                
+                <p id="api-status" class="text-[10px] text-slate-500 mt-2 font-mono">Modo manual activo (sin API)</p>
+            </div>
+
+            <!-- ENLACE Y BOTÓN DE COPIAR -->
+            <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-3">
+                <button id="generate-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-semibold rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-copy"></i> Copiar Enlace Mágico para OBS
+                </button>
                 <div>
-                    <label class="block text-xs mb-1 text-slate-300">Tono del Plástico (Hue)</label>
-                    <input type="range" id="hue" min="0" max="360" value="0" class="w-full accent-indigo-500">
+                    <label class="block text-xs mb-1 text-slate-400">Enlace generado:</label>
+                    <input type="text" id="output-url" readonly class="w-full bg-slate-950 border border-slate-800 text-xs rounded p-2 text-indigo-300 select-all" placeholder="Generando enlace...">
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: PANEL DE CONTROLES -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+            <h1 class="text-lg font-bold text-indigo-400 flex items-center gap-2">
+                <i class="fa-solid fa-sliders"></i> Personalizador
+            </h1>
+
+            <!-- 1. PERSONALIZACIÓN DE COLORES -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs mb-1 text-slate-300">Tono de Plástico (Hue)</label>
+                    <input type="range" id="conf-hue" min="0" max="360" value="0" class="w-full accent-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-xs mb-1 text-slate-300">Saturación</label>
-                    <input type="range" id="saturate" min="0" max="300" value="100" class="w-full accent-indigo-500">
+                    <label class="block text-xs mb-1 text-slate-300">Saturación (%)</label>
+                    <input type="range" id="conf-saturate" min="0" max="300" value="100" class="w-full accent-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-xs mb-1 text-slate-300">Color Fondo Cinta</label>
-                    <input type="color" id="tapeBg" value="#ffffff" class="w-full h-10 rounded bg-slate-800 border border-slate-700 cursor-pointer">
+                    <label class="block text-xs mb-1 text-slate-300">Fondo de Cinta</label>
+                    <input type="color" id="conf-bg" value="#ffffff" class="w-full h-9 rounded bg-slate-800 border border-slate-700 cursor-pointer">
                 </div>
                 <div>
-                    <label class="block text-xs mb-1 text-slate-300">Color Texto Cinta</label>
-                    <input type="color" id="tapeText" value="#111111" class="w-full h-10 rounded bg-slate-800 border border-slate-700 cursor-pointer">
+                    <label class="block text-xs mb-1 text-slate-300">Color de Texto</label>
+                    <input type="color" id="conf-color" value="#111111" class="w-full h-9 rounded bg-slate-800 border border-slate-700 cursor-pointer">
                 </div>
             </div>
 
             <hr class="border-slate-800">
 
-            <div>
-                <label class="block text-xs mb-1 text-slate-300">Prueba de Canción / Artista</label>
-                <input type="text" id="trackTitle" value="Lofi Chill Beats - VTuber Radio Vol. 1" class="w-full bg-slate-800 border border-slate-700 text-sm rounded p-2 text-white">
+            <!-- 2. AUTOMATIZACIÓN VÍA API (LAST.FM) -->
+            <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3">
+                <h3 class="text-xs font-semibold uppercase text-indigo-400 tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Automatización (Spotify / Last.fm)
+                </h3>
+                <p class="text-[11px] text-slate-400">Si configuras esto, el casete mostrará automáticamente lo que estés escuchando en tiempo real.</p>
+
+                <div>
+                    <label class="block text-xs mb-1 text-slate-300">Usuario de Last.fm</label>
+                    <input type="text" id="conf-user" placeholder="Ej: tu_usuario" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 text-white">
+                </div>
+
+                <div>
+                    <label class="block text-xs mb-1 text-slate-300">API Key de Last.fm</label>
+                    <input type="text" id="conf-apikey" placeholder="Ej: 3a2b1c4d..." class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 text-white">
+                </div>
             </div>
 
-            <div>
-                <label class="block text-xs mb-1 text-slate-300">URL Carátula Álbum</label>
-                <input type="text" id="coverUrl" value="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&auto=format&fit=crop&q=60" class="w-full bg-slate-800 border border-slate-700 text-sm rounded p-2 text-white">
-            </div>
+            <hr class="border-slate-800">
 
-            <button id="save-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-semibold rounded-xl transition text-sm">
-                Guardar y Aplicar Cambios
-            </button>
+            <!-- 3. CONFIGURACIÓN MANUAL / FALLBACK -->
+            <div class="space-y-3">
+                <h3 class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Texto Estático (Modo Manual)</h3>
+                <div>
+                    <label class="block text-xs mb-1 text-slate-300">Texto Inicial (Canción / Artista)</label>
+                    <input type="text" id="conf-title" value="Lofi Chill Beats - VTuber Radio Vol. 1" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 text-white">
+                </div>
+
+                <div>
+                    <label class="block text-xs mb-1 text-slate-300">URL Carátula del Álbum</label>
+                    <input type="text" id="conf-cover" value="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&auto=format&fit=crop&q=60" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 text-white">
+                </div>
+            </div>
         </div>
+
     </div>
 
+
     <script>
-        const saveBtn = document.getElementById('save-btn');
+        const hueInput = document.getElementById('conf-hue');
+        const saturateInput = document.getElementById('conf-saturate');
+        const bgInput = document.getElementById('conf-bg');
+        const colorInput = document.getElementById('conf-color');
 
-        saveBtn.addEventListener('click', () => {
-            const settings = {
-                hue: document.getElementById('hue').value,
-                saturate: document.getElementById('saturate').value,
-                tapeBg: document.getElementById('tapeBg').value,
-                tapeText: document.getElementById('tapeText').value,
-                trackTitle: document.getElementById('trackTitle').value,
-                coverUrl: document.getElementById('coverUrl').value,
-            };
+        const userInput = document.getElementById('conf-user');
+        const apikeyInput = document.getElementById('conf-apikey');
+        const apiStatus = document.getElementById('api-status');
 
-            localStorage.setItem('cassette_settings', JSON.stringify(settings));
-            alert('¡Configuración guardada! Actualiza o revisa tu fuente en OBS.');
+        const titleInput = document.getElementById('conf-title');
+        const coverInput = document.getElementById('conf-cover');
+
+        const widgetPrev = document.getElementById('cassette-widget-prev');
+        const prevCuerpo = document.getElementById('prev-cuerpo');
+        const prevTapeLabel = document.getElementById('prev-tape-label');
+        const prevTrackText = document.getElementById('prev-track-text');
+        const prevAlbumCover = document.getElementById('prev-album-cover');
+
+        const generateBtn = document.getElementById('generate-btn');
+        const outputUrl = document.getElementById('output-url');
+
+        let lastFetchedSong = "";
+
+        // Consultar la API si el usuario ha llenado los datos
+        async function checkApiTrack() {
+            const user = userInput.value.trim();
+            const apikey = apikeyInput.value.trim();
+
+            if (!user || !apikey) {
+                apiStatus.innerText = "Modo manual activo (sin API)";
+                apiStatus.className = "text-[10px] text-slate-500 mt-2 font-mono";
+                renderPreviewTrack(titleInput.value, coverInput.value, true);
+                return;
+            }
+
+            try {
+                const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(user)}&api_key=${encodeURIComponent(apikey)}&format=json&limit=1`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.recenttracks && data.recenttracks.track.length > 0) {
+                    const track = data.recenttracks.track[0];
+                    const isNowPlaying = track['@attr'] && track['@attr'].nowplaying === 'true';
+                    const fullTitle = `${track.name} - ${track.artist['#text']}`;
+                    
+                    const images = track.image;
+                    const coverImage = (images && images.length > 0) ? images[images.length - 1]['#text'] : coverInput.value;
+
+                    apiStatus.innerText = isNowPlaying ? "🟢 Conectado a Last.fm (Reproduciendo ahora)" : "🟡 Conectado a Last.fm (Pausado)";
+                    apiStatus.className = isNowPlaying ? "text-[10px] text-emerald-400 mt-2 font-mono font-bold" : "text-[10px] text-amber-400 mt-2 font-mono";
+
+                    renderPreviewTrack(fullTitle, coverImage, isNowPlaying);
+                }
+            } catch (err) {
+                apiStatus.innerText = "🔴 Error al conectar con Last.fm (Verifica tu usuario/API Key)";
+                apiStatus.className = "text-[10px] text-rose-400 mt-2 font-mono";
+            }
+        }
+
+        function renderPreviewTrack(title, coverUrl, isPlaying) {
+            if (lastFetchedSong === title + isPlaying) return;
+            lastFetchedSong = title + isPlaying;
+
+            prevAlbumCover.src = coverUrl || coverInput.value;
+            prevTrackText.innerText = title;
+            prevTrackText.classList.remove('marquee-active');
+
+            if (isPlaying) {
+                widgetPrev.classList.add('is-playing');
+            } else {
+                widgetPrev.classList.remove('is-playing');
+            }
+
+            if (prevTrackText.offsetWidth > (prevTapeLabel.clientWidth - 45)) {
+                prevTrackText.innerHTML = `${title} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${title} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+                prevTrackText.classList.add('marquee-active');
+            }
+        }
+
+        function updateEverything() {
+            // 1. Estilos visuales
+            prevCuerpo.style.filter = `hue-rotate(${hueInput.value}deg) saturate(${saturateInput.value}%)`;
+            prevTapeLabel.style.backgroundColor = bgInput.value;
+            prevTrackText.style.color = colorInput.value;
+
+            // 2. Generar URL con parámetros
+            const currentPath = window.location.href;
+            const basePath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+            const indexUrl = basePath + 'index.html';
+
+            const params = new URLSearchParams({
+                hue: hueInput.value,
+                saturate: saturateInput.value,
+                bg: bgInput.value,
+                color: colorInput.value,
+                title: titleInput.value,
+                cover: coverInput.value
+            });
+
+            if (userInput.value.trim()) params.append('user', userInput.value.trim());
+            if (apikeyInput.value.trim()) params.append('apikey', apikeyInput.value.trim());
+
+            outputUrl.value = `${indexUrl}?${params.toString()}`;
+
+            // 3. Checar API
+            checkApiTrack();
+        }
+
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', updateEverything);
         });
+
+        generateBtn.addEventListener('click', () => {
+            updateEverything();
+            navigator.clipboard.writeText(outputUrl.value).then(() => {
+                alert('¡Enlace copiado al portapapeles! Pégalo en tu Fuente de Navegador de OBS.');
+            });
+        });
+
+        window.onload = () => {
+            updateEverything();
+            setInterval(checkApiTrack, 5000); // Polling cada 5 segundos en la vista previa
+        };
     </script>
 </body>
 </html>
