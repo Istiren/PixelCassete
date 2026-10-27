@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 
     <style>
-        /* Transparent strict canvas for OBS */
         html, body {
             background-color: transparent !important;
             margin: 0;
@@ -141,51 +140,42 @@
         <img id="detalles-fijos" class="cassette-layer pixelated" src="detalles_fijos.png" alt="">
     </div>
 
+    <!-- AQUÍ VA EL JAVASCRIPT QUE LEE LA URL -->
     <script>
-        const cuerpoCassette = document.getElementById('cuerpo-cassette');
-        const tapeLabel = document.getElementById('tape-label');
-        const trackText = document.getElementById('track-text');
-        const albumCover = document.getElementById('album-cover');
+        window.onload = function() {
+            // 1. Capturamos los parámetros que vienen en la URL
+            const params = new URLSearchParams(window.location.search);
 
-        // Leer configuraciones guardadas por el panel o usar valores por defecto
-        function loadSettings() {
-            const settings = JSON.parse(localStorage.getItem('cassette_settings') || '{}');
+            // 2. Extraemos valores (si no hay ninguno, usamos valores por defecto)
+            const hue = params.get('hue') || '0';
+            const saturate = params.get('saturate') || '100';
+            const tapeBg = params.get('bg') || '#ffffff';
+            const tapeText = params.get('color') || '#111111';
+            const trackTitle = params.get('title') || 'Lofi Chill Beats - VTuber Radio Vol. 1';
+            const coverUrl = params.get('cover') || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&auto=format&fit=crop&q=60';
+            const speed = params.get('speed') || '10';
+
+            // 3. Aplicamos los estilos al cuerpo y la cinta
+            document.getElementById('cuerpo-cassette').style.filter = `hue-rotate(${hue}deg) saturate(${saturate}%)`;
             
-            const hue = settings.hue || 0;
-            const saturate = settings.saturate || 100;
-            const tapeBg = settings.tapeBg || '#ffffff';
-            const tapeText = settings.tapeText || '#111111';
-            const speed = settings.speed || 10;
-            const font = settings.font || "'Press Start 2P', monospace";
-
-            cuerpoCassette.style.filter = `hue-rotate(${hue}deg) saturate(${saturate}%)`;
+            const tapeLabel = document.getElementById('tape-label');
             tapeLabel.style.backgroundColor = tapeBg;
+
+            const trackText = document.getElementById('track-text');
             trackText.style.color = tapeText;
             trackText.style.animationDuration = `${speed}s`;
-            trackText.style.fontFamily = font;
 
-            if (settings.trackTitle) {
-                updateTrack(settings.trackTitle, settings.coverUrl || albumCover.src);
-            }
-        }
-
-        function updateTrack(title, cover) {
-            albumCover.src = cover;
-            trackText.innerText = title;
+            // 4. Actualizamos carátula y texto con lógica de marquee
+            const albumCover = document.getElementById('album-cover');
+            albumCover.src = coverUrl;
+            
+            trackText.innerText = trackTitle;
             trackText.classList.remove('marquee-active');
             
             if (trackText.offsetWidth > (tapeLabel.clientWidth - 45)) {
-                trackText.innerHTML = `${title} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${title} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+                trackText.innerHTML = `${trackTitle} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${trackTitle} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
                 trackText.classList.add('marquee-active');
             }
-        }
-
-        // Escuchar cambios en tiempo real si el streamer mueve sliders en config.html
-        window.addEventListener('storage', loadSettings);
-
-        window.onload = () => {
-            loadSettings();
-            updateTrack(trackText.innerText, albumCover.src);
         };
     </script>
 </body>
