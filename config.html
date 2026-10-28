@@ -9,113 +9,44 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Importamos la base de datos de diseños -->
+    <script src="themes.js"></script>
 
     <style>
-        .pixelated {
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-            -ms-interpolation-mode: nearest-neighbor;
-        }
+        .pixelated { image-rendering: pixelated; image-rendering: crisp-edges; }
+        .cassette-wrapper { position: relative; width: 380px; height: 190px; margin: 0 auto; }
+        .cassette-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 
-        .cassette-wrapper {
-            position: relative;
-            width: 380px;
-            height: 190px;
-            margin: 0 auto;
-        }
+        #prev-cuerpo  { z-index: 1; }
+        #prev-det1    { z-index: 2; }
+        .gear-prev    { z-index: 3; }
+        #prev-det2    { z-index: 4; }
+        #prev-cintas  { z-index: 5; }
+        #prev-tape-label { z-index: 6; }
 
-        .cassette-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
+        .gear { position: absolute; width: 64px; height: 64px; top: 49px; transform-origin: center center; }
+        .gear-left { left: 95px; }
+        .gear-right { left: 218px; }
+        .is-playing .gear { animation: spin 3s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        .gear {
-            position: absolute;
-            width: 48px;
-            height: 48px;
-            top: 60px;
-            z-index: 3;
-            transform-origin: center center;
-        }
+        .tape-label { position: absolute; display: flex; align-items: center; padding: 0 8px; overflow: hidden; box-sizing: border-box; }
+        .tape-label-classic { top: 17px; left: 31px; width: 318px; height: 40px; }
+        .tape-label-night   { top: 14px; left: 71px; width: 225px; height: 36px; }
 
-        .gear-left { left: 122px; }
-        .gear-right { left: 210px; }
-
-        .is-playing .gear {
-            animation: spin 3s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .tape-label {
-            position: absolute;
-            top: 17px;
-            left: 31px;
-            width: 318px;
-            height: 40px;
-            z-index: 4;
-            display: flex;
-            align-items: center;
-            padding: 0 6px;
-            overflow: hidden;
-            box-sizing: border-box;
-            background-color: #ffffff;
-            border-radius: 2px;
-        }
-
-        .album-art {
-            width: 30px;
-            height: 30px;
-            object-fit: cover;
-            border-radius: 2px;
-            margin-right: 8px;
-            flex-shrink: 0;
-            border: 1px solid rgba(0, 0, 0, 0.2);
-        }
-
-        .track-info-container {
-            overflow: hidden;
-            white-space: nowrap;
-            width: 100%;
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .track-text-scroll {
-            display: inline-block;
-            white-space: nowrap;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 10px;
-            color: #111111;
-        }
-
-        .marquee-active {
-            animation: marquee 10s linear infinite;
-        }
-
-        @keyframes marquee {
-            0% { transform: translateX(0%); }
-            100% { transform: translateX(-50%); }
-        }
-
-        #prev-cuerpo { z-index: 2; }
-        #prev-detalles { z-index: 5; }
-        #prev-cintas { z-index: 1; }
+        .album-art { width: 30px; height: 30px; object-fit: cover; border-radius: 2px; margin-right: 8px; flex-shrink: 0; border: 1px solid rgba(0, 0, 0, 0.2); }
+        .track-info-container { overflow: hidden; white-space: nowrap; width: 100%; position: relative; display: flex; align-items: center; }
+        .track-text-scroll { display: inline-block; white-space: nowrap; font-family: 'Press Start 2P', monospace; font-size: 10px; color: #111111; }
+        .marquee-active { animation: marquee 10s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
 
     <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        <!-- COLUMNA IZQUIERDA: VISTA PREVIA EN VIVO -->
+        <!-- VISTA PREVIA -->
         <div class="flex flex-col items-center justify-start space-y-4">
             <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl text-center">
                 <h2 class="text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-4 flex items-center justify-center gap-2">
@@ -124,28 +55,24 @@
                 
                 <div class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-6 relative overflow-hidden flex items-center justify-center min-h-[220px]">
                     <div id="cassette-widget-prev" class="cassette-wrapper is-playing">
-                        <img id="prev-cintas" class="cassette-layer pixelated" src="cintas_fondo.png" alt="">
+                        <img id="prev-cuerpo" class="cassette-layer pixelated" src="" alt="">
+                        <img id="prev-det1" class="cassette-layer pixelated" src="" alt="">
+                        <img id="prev-gear-l" class="gear gear-left cassette-layer pixelated gear-prev" src="" alt="">
+                        <img id="prev-gear-r" class="gear gear-right cassette-layer pixelated gear-prev" src="" alt="">
+                        <img id="prev-det2" class="cassette-layer pixelated" src="" alt="">
+                        <img id="prev-cintas" class="cassette-layer pixelated" src="" alt="">
 
                         <div id="prev-tape-label" class="tape-label">
                             <img id="prev-album-cover" class="album-art pixelated" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&auto=format&fit=crop&q=60" alt="">
                             <div class="track-info-container">
-                                <div id="prev-track-text" class="track-text-scroll">
-                                    Lofi Chill Beats - VTuber Radio Vol. 1
-                                </div>
+                                <div id="prev-track-text" class="track-text-scroll">Lofi Chill Beats - VTuber Radio Vol. 1</div>
                             </div>
                         </div>
-
-                        <img class="gear gear-left cassette-layer pixelated" src="engranaje.png" alt="">
-                        <img class="gear gear-right cassette-layer pixelated" src="engranaje.png" alt="">
-                        <img id="prev-cuerpo" class="cassette-layer pixelated" src="cuerpo_cassette.png" alt="">
-                        <img id="prev-detalles" class="cassette-layer pixelated" src="detalles_fijos.png" alt="">
                     </div>
                 </div>
-                
                 <p id="api-status" class="text-[10px] text-slate-500 mt-2 font-mono">Modo manual activo (sin API)</p>
             </div>
 
-            <!-- ENLACE Y BOTÓN DE COPIAR -->
             <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-3">
                 <button id="generate-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-semibold rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-lg">
                     <i class="fa-solid fa-copy"></i> Copiar Enlace Mágico para OBS
@@ -157,14 +84,20 @@
             </div>
         </div>
 
-        <!-- COLUMNA DERECHA: PANEL DE CONTROLES -->
+        <!-- CONTROLES -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
             <h1 class="text-lg font-bold text-indigo-400 flex items-center gap-2">
                 <i class="fa-solid fa-sliders"></i> Personalizador
             </h1>
 
-            <!-- 1. PERSONALIZACIÓN DE COLORES -->
-            <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs mb-1 text-slate-300 font-semibold">Seleccionar Estilo de Casete</label>
+                <select id="conf-design" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 text-white">
+                    <!-- Se llena dinámicamente desde themes.js -->
+                </select>
+            </div>
+
+            <div id="color-controls-box" class="grid grid-cols-2 gap-4 bg-slate-950/40 p-3 rounded-xl border border-slate-800 transition-opacity">
                 <div>
                     <label class="block text-xs mb-1 text-slate-300">Tono de Plástico (Hue)</label>
                     <input type="range" id="conf-hue" min="0" max="360" value="0" class="w-full accent-indigo-500">
@@ -175,28 +108,24 @@
                 </div>
                 <div>
                     <label class="block text-xs mb-1 text-slate-300">Fondo de Cinta</label>
-                    <input type="color" id="conf-bg" value="#ffffff" class="w-full h-9 rounded bg-slate-800 border border-slate-700 cursor-pointer">
+                    <input type="color" id="conf-bg" value="#ffffff" class="w-full h-8 rounded bg-slate-800 border border-slate-700 cursor-pointer">
                 </div>
                 <div>
                     <label class="block text-xs mb-1 text-slate-300">Color de Texto</label>
-                    <input type="color" id="conf-color" value="#111111" class="w-full h-9 rounded bg-slate-800 border border-slate-700 cursor-pointer">
+                    <input type="color" id="conf-color" value="#111111" class="w-full h-8 rounded bg-slate-800 border border-slate-700 cursor-pointer">
                 </div>
             </div>
 
             <hr class="border-slate-800">
 
-            <!-- 2. AUTOMATIZACIÓN VÍA API (LAST.FM) -->
             <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3">
                 <h3 class="text-xs font-semibold uppercase text-indigo-400 tracking-wider flex items-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Automatización (Spotify / Last.fm)
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Automatización (Last.fm)
                 </h3>
-                <p class="text-[11px] text-slate-400">Si configuras esto, el casete mostrará automáticamente lo que estés escuchando en tiempo real.</p>
-
                 <div>
                     <label class="block text-xs mb-1 text-slate-300">Usuario de Last.fm</label>
                     <input type="text" id="conf-user" placeholder="Ej: tu_usuario" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 text-white">
                 </div>
-
                 <div>
                     <label class="block text-xs mb-1 text-slate-300">API Key de Last.fm</label>
                     <input type="text" id="conf-apikey" placeholder="Ej: 3a2b1c4d..." class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 text-white">
@@ -205,14 +134,12 @@
 
             <hr class="border-slate-800">
 
-            <!-- 3. CONFIGURACIÓN MANUAL / FALLBACK -->
             <div class="space-y-3">
                 <h3 class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Texto Estático (Modo Manual)</h3>
                 <div>
                     <label class="block text-xs mb-1 text-slate-300">Texto Inicial (Canción / Artista)</label>
                     <input type="text" id="conf-title" value="Lofi Chill Beats - VTuber Radio Vol. 1" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 text-white">
                 </div>
-
                 <div>
                     <label class="block text-xs mb-1 text-slate-300">URL Carátula del Álbum</label>
                     <input type="text" id="conf-cover" value="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&auto=format&fit=crop&q=60" class="w-full bg-slate-800 border border-slate-700 text-xs rounded p-2 text-white">
@@ -222,8 +149,18 @@
 
     </div>
 
-
     <script>
+        // Rellenar el select de diseños automáticamente desde themes.js
+        const designSelect = document.getElementById('conf-design');
+        for (const [key, themeData] of Object.entries(CASSETTE_THEMES)) {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = themeData.name;
+            if (key === 'night') opt.selected = true; // Por defecto en night
+            designSelect.appendChild(opt);
+        }
+
+        const colorControlsBox = document.getElementById('color-controls-box');
         const hueInput = document.getElementById('conf-hue');
         const saturateInput = document.getElementById('conf-saturate');
         const bgInput = document.getElementById('conf-bg');
@@ -238,6 +175,11 @@
 
         const widgetPrev = document.getElementById('cassette-widget-prev');
         const prevCuerpo = document.getElementById('prev-cuerpo');
+        const prevDet1 = document.getElementById('prev-det1');
+        const prevDet2 = document.getElementById('prev-det2');
+        const prevCintas = document.getElementById('prev-cintas');
+        const prevGearL = document.getElementById('prev-gear-l');
+        const prevGearR = document.getElementById('prev-gear-r');
         const prevTapeLabel = document.getElementById('prev-tape-label');
         const prevTrackText = document.getElementById('prev-track-text');
         const prevAlbumCover = document.getElementById('prev-album-cover');
@@ -245,9 +187,6 @@
         const generateBtn = document.getElementById('generate-btn');
         const outputUrl = document.getElementById('output-url');
 
-        let lastFetchedSong = "";
-
-        // Consultar la API si el usuario ha llenado los datos
         async function checkApiTrack() {
             const user = userInput.value.trim();
             const apikey = apikeyInput.value.trim();
@@ -260,61 +199,74 @@
             }
 
             try {
-                const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(user)}&api_key=${encodeURIComponent(apikey)}&format=json&limit=1`;
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data.recenttracks && data.recenttracks.track.length > 0) {
-                    const track = data.recenttracks.track[0];
-                    const isNowPlaying = track['@attr'] && track['@attr'].nowplaying === 'true';
-                    const fullTitle = `${track.name} - ${track.artist['#text']}`;
-                    
-                    const images = track.image;
-                    const coverImage = (images && images.length > 0) ? images[images.length - 1]['#text'] : coverInput.value;
-
-                    apiStatus.innerText = isNowPlaying ? "🟢 Conectado a Last.fm (Reproduciendo ahora)" : "🟡 Conectado a Last.fm (Pausado)";
+                const res = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(user)}&api_key=${encodeURIComponent(apikey)}&format=json&limit=1`);
+                const data = await res.json();
+                if (data.recenttracks?.track.length > 0) {
+                    const t = data.recenttracks.track[0];
+                    const isNowPlaying = t['@attr']?.nowplaying === 'true';
+                    apiStatus.innerText = isNowPlaying ? "🟢 Conectado a Last.fm (Reproduciendo)" : "🟡 Conectado a Last.fm (Pausado)";
                     apiStatus.className = isNowPlaying ? "text-[10px] text-emerald-400 mt-2 font-mono font-bold" : "text-[10px] text-amber-400 mt-2 font-mono";
-
-                    renderPreviewTrack(fullTitle, coverImage, isNowPlaying);
+                    renderPreviewTrack(`${t.name} - ${t.artist['#text']}`, t.image[t.image.length - 1]['#text'], isNowPlaying);
                 }
             } catch (err) {
-                apiStatus.innerText = "🔴 Error al conectar con Last.fm (Verifica tu usuario/API Key)";
+                apiStatus.innerText = "🔴 Error al conectar con Last.fm";
                 apiStatus.className = "text-[10px] text-rose-400 mt-2 font-mono";
             }
         }
 
-        function renderPreviewTrack(title, coverUrl, isPlaying) {
-            if (lastFetchedSong === title + isPlaying) return;
-            lastFetchedSong = title + isPlaying;
-
-            prevAlbumCover.src = coverUrl || coverInput.value;
+        function renderPreviewTrack(title, cover, isPlaying) {
+            prevAlbumCover.src = cover || coverInput.value;
             prevTrackText.innerText = title;
             prevTrackText.classList.remove('marquee-active');
+            widgetPrev.classList.toggle('is-playing', isPlaying);
 
-            if (isPlaying) {
-                widgetPrev.classList.add('is-playing');
-            } else {
-                widgetPrev.classList.remove('is-playing');
-            }
-
-            if (prevTrackText.offsetWidth > (prevTapeLabel.clientWidth - 45)) {
+            if (prevTrackText.offsetWidth > (prevTapeLabel.clientWidth - 35)) {
                 prevTrackText.innerHTML = `${title} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${title} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
                 prevTrackText.classList.add('marquee-active');
             }
         }
 
         function updateEverything() {
-            // 1. Estilos visuales
-            prevCuerpo.style.filter = `hue-rotate(${hueInput.value}deg) saturate(${saturateInput.value}%)`;
-            prevTapeLabel.style.backgroundColor = bgInput.value;
-            prevTrackText.style.color = colorInput.value;
+            const currentThemeKey = designSelect.value;
+            const theme = CASSETTE_THEMES[currentThemeKey] || CASSETTE_THEMES['night'];
 
-            // 2. Generar URL con parámetros
+            // Habilitar o bloquear controles de color según el tema
+            colorControlsBox.style.opacity = theme.customizable ? '1' : '0.4';
+            hueInput.disabled = !theme.customizable;
+            saturateInput.disabled = !theme.customizable;
+
+            // Pintar capas según el tema
+            prevCuerpo.src = theme.cuerpo;
+            prevDet1.src = theme.detalles1;
+            prevCintas.src = theme.cintas;
+            prevGearL.src = theme.engranaje;
+            prevGearR.src = theme.engranaje;
+
+            if (theme.detalles2) {
+                prevDet2.src = theme.detalles2;
+                prevDet2.style.display = 'block';
+            } else {
+                prevDet2.style.display = 'none';
+            }
+
+            // Aplicar clases de posición y estilos
+            prevTapeLabel.className = `tape-label ${theme.labelClass}`;
+            if (theme.customizable) {
+                prevCuerpo.style.filter = `hue-rotate(${hueInput.value}deg) saturate(${saturateInput.value}%)`;
+                prevTapeLabel.style.backgroundColor = bgInput.value;
+            } else {
+                prevCuerpo.style.filter = 'none';
+                prevTapeLabel.style.backgroundColor = 'transparent';
+            }
+
+            prevTrackText.style.color = colorInput.value;
+            renderPreviewTrack(prevTrackText.innerText, prevAlbumCover.src, true);
+
+            // Generar URL para OBS
             const currentPath = window.location.href;
             const basePath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-            const indexUrl = basePath + 'index.html';
-
             const params = new URLSearchParams({
+                design: currentThemeKey,
                 hue: hueInput.value,
                 saturate: saturateInput.value,
                 bg: bgInput.value,
@@ -322,18 +274,15 @@
                 title: titleInput.value,
                 cover: coverInput.value
             });
-
             if (userInput.value.trim()) params.append('user', userInput.value.trim());
             if (apikeyInput.value.trim()) params.append('apikey', apikeyInput.value.trim());
 
-            outputUrl.value = `${indexUrl}?${params.toString()}`;
-
-            // 3. Checar API
+            outputUrl.value = `${basePath}index.html?${params.toString()}`;
             checkApiTrack();
         }
 
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', updateEverything);
+        document.querySelectorAll('input, select').forEach(elem => {
+            elem.addEventListener('input', updateEverything);
         });
 
         generateBtn.addEventListener('click', () => {
@@ -345,7 +294,7 @@
 
         window.onload = () => {
             updateEverything();
-            setInterval(checkApiTrack, 5000); // Polling cada 5 segundos en la vista previa
+            setInterval(checkApiTrack, 5000);
         };
     </script>
 </body>
