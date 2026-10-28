@@ -122,14 +122,14 @@
 </head>
 <body>
 
-    <div id="cassette-widget" class="cassette-wrapper is-playing">
+    <div id="cassette-widget" class="cassette-wrapper">
         <img id="cintas-fondo" class="cassette-layer pixelated" src="cintas_fondo.png" alt="">
 
         <div id="tape-label" class="tape-label">
             <img id="album-cover" class="album-art pixelated" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&auto=format&fit=crop&q=60" alt="">
             <div class="track-info-container">
                 <div id="track-text" class="track-text-scroll">
-                    Lofi Chill Beats - VTuber Radio Vol. 1
+                    Cargando música...
                 </div>
             </div>
         </div>
@@ -140,24 +140,27 @@
         <img id="detalles-fijos" class="cassette-layer pixelated" src="detalles_fijos.png" alt="">
     </div>
 
-    <!-- AQUÍ VA EL JAVASCRIPT QUE LEE LA URL -->
     <script>
         window.onload = function() {
-            // 1. Capturamos los parámetros que vienen en la URL
             const params = new URLSearchParams(window.location.search);
 
-            // 2. Extraemos valores (si no hay ninguno, usamos valores por defecto)
+            // 1. Estilos visuales por URL
             const hue = params.get('hue') || '0';
             const saturate = params.get('saturate') || '100';
             const tapeBg = params.get('bg') || '#ffffff';
             const tapeText = params.get('color') || '#111111';
-            const trackTitle = params.get('title') || 'Lofi Chill Beats - VTuber Radio Vol. 1';
-            const coverUrl = params.get('cover') || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&auto=format&fit=crop&q=60';
             const speed = params.get('speed') || '10';
 
-            // 3. Aplicamos los estilos al cuerpo y la cinta
+            // Parámetros de API
+            const lastfmUser = params.get('user');
+            const apiKey = params.get('apikey');
+
+            // Fallback manual si no hay API
+            const manualTitle = params.get('title') || 'Lofi Chill Beats - VTuber Radio';
+            const manualCover = params.get('cover') || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&auto=format&fit=crop&q=60';
+
+            // Aplicar estilos
             document.getElementById('cuerpo-cassette').style.filter = `hue-rotate(${hue}deg) saturate(${saturate}%)`;
-            
             const tapeLabel = document.getElementById('tape-label');
             tapeLabel.style.backgroundColor = tapeBg;
 
@@ -165,17 +168,65 @@
             trackText.style.color = tapeText;
             trackText.style.animationDuration = `${speed}s`;
 
-            // 4. Actualizamos carátula y texto con lógica de marquee
             const albumCover = document.getElementById('album-cover');
-            albumCover.src = coverUrl;
-            
-            trackText.innerText = trackTitle;
-            trackText.classList.remove('marquee-active');
-            
-            if (trackText.offsetWidth > (tapeLabel.clientWidth - 45)) {
-                trackText.innerHTML = `${trackTitle} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${trackTitle} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
-                trackText.classList.add('marquee-active');
+            const cassetteWidget = document.getElementById('cassette-widget');
+
+            let currentTrackName = "";
+
+            function renderTrack(title, coverUrl, isPlaying) {
+                if (currentTrackName === title + isPlaying) return;
+                currentTrackName = title + isPlaying;
+
+                albumCover.src = coverUrl || manualCover;
+                trackText.innerText = title;
+                trackText.classList.remove('marquee-active');
+
+                if (isPlaying) {
+                    cassetteWidget.classList.add('is-playing');
+                } else {
+                    cassetteWidget.classList.remove('is-playing');
+                }
+
+                if (trackText.offsetWidth > (tapeLabel.clientWidth - 45)) {
+                    trackText.innerHTML = `${title} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${title} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+                    trackText.classList.add('marquee-active');
+                }
             }
+
+            // Motor de consulta a Last.fm
+            async function fetchCurrentlyPlaying() {
+                if (!lastfmUser || !apiKey) {
+                    renderTrack(manualTitle, manualCover, true);
+                    return;
+                }
+
+                try {
+                    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lastfmUser)}&api_key=${encodeURIComponent(apiKey)}&format=json&limit=1`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.recenttracks && data.recenttracks.track.length > 0) {
+                        const track = data.recenttracks.track[0];
+                        const isNowPlaying = track['@attr'] && track['@attr'].nowplaying === 'true';
+                        
+                        const trackName = track.name;
+                        const artistName = track.artist['#text'];
+                        const fullTitle = `${trackName} - ${artistName}`;
+                        
+                        const images = track.image;
+                        const coverImage = (images && images.length > 0) ? images[images.length - 1]['#text'] : manualCover;
+
+                        renderTrack(fullTitle, coverImage, isNowPlaying);
+                    }
+                } catch (error) {
+                    console.error("Error al consultar Last.fm:", error);
+                    renderTrack(manualTitle, manualCover, false);
+                }
+            }
+
+            // Ejecutar al iniciar y hacer polling cada 4 segundos
+            fetchCurrentlyPlaying();
+            setInterval(fetchCurrentlyPlaying, 4000);
         };
     </script>
 </body>
